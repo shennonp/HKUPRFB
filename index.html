@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fireblocks PR — Pitch Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0D0D12;--paper:#F7F6F2;--cream:#EDEBE4;--mid:#B8B2A6;--steel:#6B6560;
+  --orange:#E85D26;--orange-bg:#FEF3EE;
+  --amber:#C47B1A;--amber-bg:#FBF5EA;
+  --green:#1E7A4C;--green-bg:#EDF7F2;
+  --red:#C8372D;--red-bg:#FBF0EF;
+  --blue:#1A4BAD;--blue-bg:#EDF2FB;
+  --border:rgba(13,13,18,0.09);
+}
+html,body{background:var(--paper);color:var(--ink);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh}
+
+/* HEADER */
+header{background:var(--ink);padding:0 28px;display:flex;align-items:stretch;border-bottom:3px solid var(--orange);position:sticky;top:0;z-index:50;min-height:60px}
+.hdr-brand{display:flex;align-items:center;gap:12px;padding:0 24px 0 0;border-right:1px solid rgba(255,255,255,0.08)}
+.hdr-brand h1{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#fff;letter-spacing:-0.01em;white-space:nowrap}
+.client-tag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--orange);background:rgba(232,93,38,0.15);padding:3px 8px;border-radius:2px}
+.hdr-nav{display:flex;align-items:stretch;flex:1;padding-left:4px}
+.nav-tab{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--mid);padding:0 18px;cursor:pointer;transition:all .15s;display:flex;align-items:center;border-bottom:3px solid transparent;margin-bottom:-3px;white-space:nowrap}
+.nav-tab:hover{color:#fff}
+.nav-tab.active{color:#fff;border-bottom-color:var(--orange)}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px;padding-left:16px}
+.sync-pill{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;color:var(--mid);border:1px solid rgba(255,255,255,0.1);padding:5px 10px;border-radius:3px;white-space:nowrap}
+.sync-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--mid);transition:background .3s;flex-shrink:0}
+.sync-pill.live .dot{background:#4ade80;box-shadow:0 0 5px #4ade8066}
+.sync-pill.live{color:#4ade80;border-color:rgba(74,222,128,0.2)}
+.sync-pill.saving .dot{background:var(--amber);animation:blink 1s infinite}
+.sync-pill.error .dot{background:var(--red)}
+.sync-pill.error{color:var(--red);border-color:rgba(200,55,45,0.25)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hbtn{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.05em;text-transform:uppercase;padding:7px 12px;border-radius:3px;cursor:pointer;border:1.5px solid;transition:all .15s;white-space:nowrap;line-height:1}
+.btn-orange{color:#fff;border-color:var(--orange);background:var(--orange)}
+.btn-orange:hover{background:#c44d1e}
+.btn-ghost{color:var(--mid);border-color:rgba(255,255,255,0.15);background:none}
+.btn-ghost:hover{color:#fff;border-color:#fff}
+
+/* PAGES */
+.page{display:none;min-height:calc(100vh - 63px)}
+.page.active{display:block}
+
+/* ══ LOG TAB ══════════════════════════════════════════ */
+.log-layout{display:grid;grid-template-columns:340px 1fr;min-height:calc(100vh - 63px)}
+
+.form-panel{background:var(--cream);border-right:1px solid var(--border);padding:22px 18px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;max-height:calc(100vh - 63px);position:sticky;top:63px}
+.form-panel h2{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;padding-bottom:12px;border-bottom:2px solid var(--ink)}
+
+.field label{display:block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--steel);margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 10px;border:1.5px solid var(--border);border-radius:3px;background:#fff;color:var(--ink);outline:none;transition:border-color .15s;-webkit-appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--orange)}
+.field input[type=date]{font-family:'DM Mono',monospace;font-size:12px}
+.field textarea{resize:vertical;min-height:56px}
+
+/* Reporter paste area */
+.reporter-box{border:1.5px solid var(--border);border-radius:4px;background:#fff;overflow:hidden}
+.reporter-box-header{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--cream);border-bottom:1px solid var(--border)}
+.reporter-box-header span{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--steel)}
+.reporter-box-header .cnt{font-family:'DM Mono',monospace;font-size:11px;color:var(--orange);font-weight:600}
+.reporter-ta{width:100%;font-family:'DM Mono',monospace;font-size:11.5px;padding:10px;border:none;outline:none;resize:vertical;min-height:110px;line-height:1.7;color:var(--ink);background:#fff}
+.reporter-hint{font-size:11px;color:var(--steel);padding:0 10px 8px;font-style:italic}
+.reporter-preview{max-height:160px;overflow-y:auto;border-top:1px solid var(--border)}
+.rp-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--border);font-size:12px}
+.rp-row:last-child{border-bottom:none}
+.rp-name{font-weight:500;flex:1}
+.rp-outlet{color:var(--steel);font-size:11px}
+.rp-remove{font-family:'DM Mono',monospace;font-size:10px;color:var(--red);cursor:pointer;border:none;background:none;padding:2px 5px;border-radius:2px;transition:all .12s}
+.rp-remove:hover{background:var(--red-bg)}
+
+.submit-btn{width:100%;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;background:var(--orange);color:#fff;border:none;border-radius:3px;padding:12px;cursor:pointer;transition:background .15s}
+.submit-btn:hover{background:#c44d1e}
+.cancel-btn{width:100%;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;background:none;color:var(--steel);border:1.5px solid var(--border);border-radius:3px;padding:9px;cursor:pointer;transition:all .15s}
+.cancel-btn:hover{border-color:var(--ink);color:var(--ink)}
+
+/* PITCH LIST */
+.pitch-list-panel{display:flex;flex-direction:column}
+.list-bar{padding:11px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--paper)}
+.rcount{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;white-space:nowrap}
+.rcount span{font-family:'DM Mono',monospace;font-size:18px;color:var(--orange);margin-right:3px}
+.sw{position:relative}
+.sw input{font-family:'DM Mono',monospace;font-size:12px;padding:7px 10px 7px 27px;border:1.5px solid var(--border);border-radius:3px;background:var(--paper);color:var(--ink);outline:none;width:180px;transition:border-color .15s}
+.sw input:focus{border-color:var(--orange)}
+.sw::before{content:'⌕';position:absolute;left:7px;top:50%;transform:translateY(-50%);color:var(--steel);font-size:14px;pointer-events:none}
+.fsel{font-family:'DM Mono',monospace;font-size:11px;padding:7px 26px 7px 9px;border:1.5px solid var(--border);border-radius:3px;background:var(--paper);color:var(--ink);outline:none;cursor:pointer;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5'%3E%3Cpath d='M0 0l4.5 5L9 0z' fill='%236B6560'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.fsel:focus{border-color:var(--orange)}
+.exp-grp{display:flex;gap:6px;margin-left:auto}
+.ebtn{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.04em;text-transform:uppercase;border-radius:3px;padding:6px 10px;cursor:pointer;border:1.5px solid;transition:all .15s;white-space:nowrap}
+.btn-csv{color:var(--green);border-color:var(--green);background:var(--green-bg)}
+.btn-csv:hover{background:var(--green);color:#fff}
+.btn-cpy{color:var(--blue);border-color:var(--blue);background:var(--blue-bg)}
+.btn-cpy:hover{background:var(--blue);color:#fff}
+
+/* PITCH CARDS */
+.cards-wrap{flex:1;overflow-y:auto;padding:16px 22px 40px;display:flex;flex-direction:column;gap:12px}
+.pitch-card{background:#fff;border:1.5px solid var(--border);border-radius:5px;overflow:hidden;transition:border-color .15s}
+.pitch-card:hover{border-color:var(--mid)}
+.pc-head{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;cursor:pointer}
+.pc-date{font-family:'DM Mono',monospace;font-size:11px;color:var(--steel);white-space:nowrap;margin-top:2px;min-width:80px}
+.pc-main{flex:1;min-width:0}
+.pc-topic{font-weight:600;font-size:14px;margin-bottom:5px;line-height:1.3}
+.pc-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tag{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;padding:2px 7px;border-radius:2px;white-space:nowrap}
+.tag-country{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(196,123,26,0.2)}
+.tag-spk{background:var(--orange-bg);color:var(--orange);border:1px solid rgba(232,93,38,0.2)}
+.tag-count{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(26,75,173,0.2)}
+.pc-actions{display:flex;gap:5px;flex-shrink:0}
+.pc-btn{font-family:'DM Mono',monospace;font-size:10px;padding:4px 8px;border-radius:2px;cursor:pointer;border:1px solid;transition:all .12s;background:none}
+.pc-edit{color:var(--blue);border-color:var(--blue)}
+.pc-edit:hover{background:var(--blue);color:#fff}
+.pc-del{color:var(--red);border-color:var(--red)}
+.pc-del:hover{background:var(--red);color:#fff}
+.pc-toggle{color:var(--steel);border-color:var(--border)}
+.pc-toggle:hover{border-color:var(--ink);color:var(--ink)}
+
+.pc-reporters{display:none;border-top:1px solid var(--border);background:var(--cream)}
+.pc-reporters.open{display:block}
+.pc-rep-list{padding:10px 16px;display:flex;flex-wrap:wrap;gap:6px}
+.rep-chip{font-family:'DM Mono',monospace;font-size:11px;padding:3px 9px;background:#fff;border:1px solid var(--border);border-radius:3px;color:var(--ink)}
+.rep-chip span{color:var(--steel);margin-left:4px;font-size:10px}
+.pc-link{padding:6px 16px 12px;font-family:'DM Mono',monospace;font-size:11px}
+.pc-link a{color:var(--blue);text-decoration:none}
+.pc-link a:hover{text-decoration:underline}
+.pc-notes{padding:0 16px 12px;font-size:12px;color:var(--steel)}
+
+.empty{display:none;flex-direction:column;align-items:center;justify-content:center;padding:70px 40px;text-align:center;gap:12px}
+.empty.on{display:flex}
+.ei{font-size:36px;opacity:.25}
+.empty h3{font-family:'Syne',sans-serif;font-weight:700;font-size:15px}
+.empty p{font-size:13px;color:var(--steel);max-width:280px;line-height:1.6}
+
+/* ══ BULK CHECK TAB ════════════════════════════════════ */
+.bulk-page{padding:28px 32px}
+.pg-header{margin-bottom:22px}
+.pg-header h2{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;letter-spacing:-0.02em}
+.pg-header p{font-size:13px;color:var(--steel);margin-top:5px;line-height:1.6}
+.bulk-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+.card{background:#fff;border:1.5px solid var(--border);border-radius:5px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.card h3{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;color:var(--steel);padding-bottom:10px;border-bottom:1.5px solid var(--border)}
+.info-box{background:var(--blue-bg);border-radius:3px;padding:11px 13px;font-size:12px;color:var(--steel);line-height:1.7}
+.info-box code{font-family:'DM Mono',monospace;font-size:11px;background:rgba(26,75,173,0.1);padding:2px 5px;border-radius:2px;color:var(--blue)}
+.bulk-ta{width:100%;font-family:'DM Mono',monospace;font-size:12px;padding:10px;border:1.5px solid var(--border);border-radius:3px;background:#fff;outline:none;resize:vertical;min-height:200px;line-height:1.7;transition:border-color .15s}
+.bulk-ta:focus{border-color:var(--orange)}
+.check-btn{width:100%;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;background:var(--orange);color:#fff;border:none;border-radius:3px;padding:11px;cursor:pointer;transition:background .15s}
+.check-btn:hover{background:#c44d1e}
+.full-col{grid-column:1/-1}
+
+/* country limit bars */
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.bar-label{font-size:12px;font-weight:500;min-width:100px;white-space:nowrap}
+.bar-track{flex:1;background:var(--cream);border-radius:2px;height:7px;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px;background:var(--orange);transition:width .4s}
+.bar-fill.over{background:var(--red)}
+.bar-fill.warn{background:var(--amber)}
+.bar-ct{font-family:'DM Mono',monospace;font-size:11px;color:var(--steel);min-width:28px;text-align:right}
+.lim-tag{font-family:'DM Mono',monospace;font-size:10px;padding:2px 6px;border-radius:2px;white-space:nowrap}
+.lim-ok{background:var(--green-bg);color:var(--green)}
+.lim-warn{background:var(--amber-bg);color:var(--amber)}
+.lim-over{background:var(--red-bg);color:var(--red)}
+
+/* bulk results */
+.bsum-bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.bsum{padding:10px 14px;border-radius:4px;font-family:'DM Mono',monospace;display:flex;flex-direction:column;gap:3px;min-width:90px}
+.bsum-v{font-size:22px;font-weight:600;line-height:1}
+.bsum-l{font-size:10px;letter-spacing:0.06em;text-transform:uppercase;opacity:.7}
+.bsum-red{background:var(--red-bg);color:var(--red)}
+.bsum-amber{background:var(--amber-bg);color:var(--amber)}
+.bsum-green{background:var(--green-bg);color:var(--green)}
+.bsum-blue{background:var(--blue-bg);color:var(--blue)}
+
+.res-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.res-row:last-child{border-bottom:none}
+.res-flag{font-family:'DM Mono',monospace;font-size:10px;padding:3px 9px;border-radius:3px;white-space:nowrap;min-width:110px;text-align:center}
+.f-red{background:var(--red-bg);color:var(--red);border:1px solid rgba(200,55,45,0.2)}
+.f-amber{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(196,123,26,0.2)}
+.f-green{background:var(--green-bg);color:var(--green);border:1px solid rgba(30,122,76,0.2)}
+.res-name{font-weight:500;flex:1}
+.res-outlet{font-size:12px;color:var(--steel);flex:1}
+.res-ct{font-family:'DM Mono',monospace;font-size:11px;color:var(--steel);white-space:nowrap}
+
+/* ══ SUMMARY TAB ════════════════════════════════════════ */
+.sum-page{padding:28px 32px}
+.sum-hdr{display:flex;align-items:center;gap:14px;margin-bottom:24px;flex-wrap:wrap}
+.sum-hdr h2{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;letter-spacing:-0.02em;flex:1}
+.month-sel{font-family:'DM Mono',monospace;font-size:12px;padding:8px 28px 8px 10px;border:1.5px solid var(--border);border-radius:3px;background:#fff;color:var(--ink);outline:none;cursor:pointer;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5'%3E%3Cpath d='M0 0l4.5 5L9 0z' fill='%236B6560'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.month-sel:focus{border-color:var(--orange)}
+.exp-sum{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.05em;text-transform:uppercase;color:var(--green);border:1.5px solid var(--green);background:var(--green-bg);border-radius:3px;padding:8px 13px;cursor:pointer;transition:all .15s}
+.exp-sum:hover{background:var(--green);color:#fff}
+
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:#fff;border:1.5px solid var(--border);border-radius:5px;padding:18px}
+.stat-card .v{font-family:'DM Mono',monospace;font-size:30px;font-weight:600;color:var(--orange);line-height:1}
+.stat-card .l{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--steel);margin-top:6px}
+
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.sum-card{background:#fff;border:1.5px solid var(--border);border-radius:5px;padding:18px}
+.sum-card h3{font-family:'Syne',sans-serif;font-weight:700;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--steel);margin-bottom:14px;padding-bottom:9px;border-bottom:1.5px solid var(--border)}
+.full{grid-column:1/-1}
+
+/* reporter contact table in summary */
+.rep-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.rep-table th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--steel);padding:6px 10px;border-bottom:1.5px solid var(--ink);text-align:left;white-space:nowrap}
+.rep-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.rep-table tr:last-child td{border-bottom:none}
+.rep-table td a{color:var(--blue);text-decoration:none;font-family:'DM Mono',monospace;font-size:11px}
+.rep-table td a:hover{text-decoration:underline}
+
+/* MODAL / SETUP */
+.mb{position:fixed;inset:0;background:rgba(13,13,18,0.6);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(2px)}
+.mb.on{opacity:1;pointer-events:all}
+.md{background:var(--paper);border-radius:6px;width:580px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.3)}
+.mh{background:var(--ink);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;border-radius:6px 6px 0 0;position:sticky;top:0}
+.mh h2{font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:#fff}
+.mc{background:none;border:none;color:var(--mid);font-size:20px;cursor:pointer;line-height:1;transition:color .15s}
+.mc:hover{color:#fff}
+.mb-body{padding:22px;display:flex;flex-direction:column;gap:14px}
+.step{display:flex;gap:12px}
+.sn{width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.sc h4{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:5px}
+.sc p{font-size:12.5px;color:var(--steel);line-height:1.65}
+code{font-family:'DM Mono',monospace;font-size:11px;background:var(--cream);padding:2px 5px;border-radius:2px;color:var(--ink)}
+.kw{display:flex;gap:7px;margin-top:9px}
+.kw input{flex:1;font-family:'DM Mono',monospace;font-size:12px;padding:9px 10px;border:1.5px solid var(--border);border-radius:3px;outline:none;background:#fff;transition:border-color .15s}
+.kw input:focus{border-color:var(--orange)}
+.btn-conn{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;background:var(--orange);color:#fff;border:none;border-radius:3px;padding:9px 14px;cursor:pointer;white-space:nowrap;transition:background .15s}
+.btn-conn:hover{background:#c44d1e}
+.cs{font-family:'DM Mono',monospace;font-size:11px;margin-top:7px}
+.cs.ok{color:var(--green)}.cs.err{color:var(--red)}
+.setup-note{background:var(--amber-bg);border-radius:4px;padding:11px 13px;font-size:12px;color:var(--amber);line-height:1.6;border-left:3px solid var(--amber)}
+
+
+
+/* ── MEDIA DATABASE LAYOUT ── */
+.media-layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 63px)}
+.media-sidebar{background:var(--cream);border-right:1px solid var(--border);padding:20px 16px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;max-height:calc(100vh - 63px);position:sticky;top:63px}
+.media-main{display:flex;flex-direction:column;overflow:hidden}
+.msb-search{}
+.msb-div{height:1px;background:var(--border);flex-shrink:0}
+.msb-group{display:flex;flex-direction:column;gap:8px}
+.msb-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--steel);font-weight:600}
+.msb-chips{display:flex;flex-direction:column;gap:4px}
+.mchip{font-family:'DM Mono',monospace;font-size:11px;padding:6px 10px;border-radius:3px;border:1.5px solid var(--border);background:var(--paper);color:var(--steel);cursor:pointer;transition:all .12s;user-select:none;text-align:left}
+.mchip:hover{border-color:var(--ink);color:var(--ink);background:#fff}
+.mchip.active{background:var(--ink);border-color:var(--ink);color:#fff}
+.mchip.all.active{background:var(--orange);border-color:var(--orange);color:#fff}
+.pills{display:flex;gap:5px;flex-wrap:wrap;flex:1;min-width:0}
+.pill{font-family:'DM Mono',monospace;font-size:10px;padding:3px 7px;background:var(--ink);color:#fff;border-radius:2px}
+
+/* ══ MEDIA DATABASE TAB ══════════════════════════════ */
+.sidebar{background:var(--cream);border-right:1px solid var(--border);padding:20px 16px;display:flex;flex-direction:column;gap:18px;overflow-y:auto;max-height:calc(100vh - 63px);position:sticky;top:63px}
+.div2{height:1px;background:var(--border)}
+.clr-btn2{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.05em;text-transform:uppercase;color:var(--orange);background:none;border:1.5px solid var(--orange);border-radius:3px;padding:7px;cursor:pointer;width:100%;transition:all .15s}
+.clr-btn2:hover{background:var(--orange);color:#fff}
+.fg{display:flex;flex-direction:column}
+.fg label{display:block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--steel);margin-bottom:7px}
+.btn-orange-outline{color:var(--orange);border-color:var(--orange);background:none}
+.btn-orange-outline:hover{background:var(--orange);color:#fff}
+.btn-orange-solid{color:#fff;border-color:var(--orange);background:var(--orange)}
+.btn-orange-solid:hover{background:#c44d1e}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-grid .full{grid-column:1/-1}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;padding-top:4px}
+.btn-primary{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;background:var(--ink);color:#fff;border:none;border-radius:3px;padding:9px 16px;cursor:pointer;transition:background .15s}
+.btn-primary:hover{background:#222}
+.btn-secondary{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;background:none;color:var(--steel);border:1.5px solid var(--border);border-radius:3px;padding:9px 12px;cursor:pointer;transition:all .15s}
+.btn-secondary:hover{border-color:var(--ink);color:var(--ink)}
+.btn-danger{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;background:var(--red);color:#fff;border:none;border-radius:3px;padding:9px 12px;cursor:pointer;transition:background .15s;margin-right:auto}
+.btn-danger:hover{background:#a82820}
+.md-lg{width:680px}
+.bulk-ta{width:100%;font-family:'DM Mono',monospace;font-size:12px;padding:10px;border:1.5px solid var(--border);border-radius:3px;background:#fff;outline:none;resize:vertical;min-height:180px;line-height:1.7;transition:border-color .15s}
+.bulk-ta:focus{border-color:var(--orange)}
+.preview-ok{color:var(--green);font-family:'DM Mono',monospace;font-size:11px;margin-top:5px}
+.preview-err{color:var(--red);font-family:'DM Mono',monospace;font-size:11px;margin-top:5px}
+.preview-table{width:100%;border-collapse:collapse;font-size:12px;max-height:150px;display:block;overflow-y:auto}
+.preview-table th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--steel);padding:5px 9px;border-bottom:1.5px solid var(--ink);text-align:left;background:var(--cream);position:sticky;top:0}
+.preview-table td{padding:5px 9px;border-bottom:1px solid var(--border)}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;font-family:'DM Mono',monospace;font-size:12px;padding:10px 15px;border-radius:4px;opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none;z-index:500;max-width:340px;line-height:1.5}
+.toast.on{opacity:1;transform:translateY(0)}
+.toast.s{border-left:3px solid #4ade80}
+.toast.e{border-left:3px solid var(--red)}
+.toast.w{border-left:3px solid var(--amber)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-brand">
+    <h1>HOKKU PR</h1>
+    <span class="client-tag">Fireblocks</span>
+  </div>
+  <nav class="hdr-nav">
+    <div class="nav-tab active" data-page="log" onclick="showPage(this)">Log Pitch</div>
+    <div class="nav-tab" data-page="bulk" onclick="showPage(this)">Media Outreach Checker</div>
+    <div class="nav-tab" data-page="summary" onclick="showPage(this)">Monthly Summary</div>
+    <div class="nav-tab" data-page="media" onclick="showPage(this)">Media Database</div>
+  </nav>
+  <div class="hdr-right">
+    <div class="sync-pill" id="syncPill"><span class="dot"></span><span id="syncLabel">Not connected</span></div>
+    <button class="hbtn btn-ghost" onclick="openSetup()">⚙</button>
+  </div>
+</header>
+
+<!-- ══ LOG PAGE ══ -->
+<div class="page active" id="page-log">
+  <div class="log-layout">
+
+    <!-- FORM -->
+    <aside class="form-panel">
+      <h2 id="formTitle">+ Log a Pitch</h2>
+      <input type="hidden" id="editId">
+
+      <div class="field"><label>Date *</label><input type="date" id="f-date"></div>
+      <div class="field"><label>Country *</label>
+        <select id="f-country">
+          <option value="">— select —</option>
+          <option>UK</option><option>UAE</option><option>France</option>
+          <option>Germany</option><option>Switzerland</option><option>South Korea</option>
+          <option>Singapore</option><option>Hong Kong</option><option>Thailand</option>
+          <option>Japan</option><option>US</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field"><label>Pitch Title / Topic *</label>
+        <input type="text" id="f-topic" placeholder="e.g. Fireblocks Institutional Custody Launch">
+      </div>
+      <div class="field"><label>Spokesperson</label>
+        <select id="f-spokesperson">
+          <option value="">— select —</option>
+          <option>Michael Shaulov — CEO & Co-Founder</option>
+          <option>Ran Goldi — SVP, Payments & Network</option>
+          <option>Shahar Madar — VP of Security & Trust Products</option>
+          <option>Stephen Richardson — Chief Strategy Officer & Head of Banking</option>
+          <option>Michael Levine — Chief Financial Officer</option>
+          <option>Tim Way — Global Head of Banking Initiatives</option>
+          <option>Adam Levine — SVP, Corporate Development & Partnerships; CEO, Fireblocks Trust Company</option>
+          <option>Neil Chopra — Head of Strategy & Business Development, Americas</option>
+          <option>Dea Markova — Director of Policy</option>
+          <option>Varun Paul — Senior Director, Financial Markets</option>
+          <option>John Hallahan — Director of Business Solutions & Advisory</option>
+          <option>Richard Astle — VP of Business Development for the Fireblocks Network</option>
+          <option>Alexandre Chessé — Head of Sales, France, Middle East, and Africa</option>
+          <option>Amy Zhang — Head of APAC</option>
+          <option>Oded — CIO & CISO of Fireblocks</option>
+          <option>Idan Ofrat — Co-Founder and CPO</option>
+          <option>Itay — Dynamic</option>
+          <option>Tal Zackon — SVP Treasury</option>
+        </select>
+      </div>
+      <div class="field"><label>Link to Pitch Doc</label>
+        <input type="url" id="f-link" placeholder="https://drive.google.com/…">
+      </div>
+      <div class="field"><label>Notes</label>
+        <textarea id="f-notes" placeholder="Any context…"></textarea>
+      </div>
+
+      <!-- Reporter paste zone -->
+      <div class="field">
+        <label>Reporters Pitched *</label>
+        <div class="reporter-box">
+          <div class="reporter-box-header">
+            <span>Paste list below</span>
+            <span class="cnt" id="repCount">0 reporters</span>
+          </div>
+          <textarea class="reporter-ta" id="f-reporters"
+            placeholder="Paste from spreadsheet:&#10;James Walker&#9;Financial Times&#10;Sarah Chen&#9;Bloomberg&#10;Emma Thompson&#9;BBC&#10;&#10;One reporter per line. Tab or comma separated."
+            oninput="parseReporters()"></textarea>
+          <div class="reporter-hint">Name + Outlet, tab or comma separated. One per line.</div>
+          <div class="reporter-preview" id="repPreview"></div>
+        </div>
+      </div>
+
+      <button class="submit-btn" onclick="savePitch()">Save Pitch</button>
+      <button class="cancel-btn" id="cancelBtn" onclick="cancelEdit()" style="display:none">Cancel Edit</button>
+    </aside>
+
+    <!-- PITCH LIST -->
+    <div class="pitch-list-panel">
+      <div class="list-bar">
+        <div class="rcount"><span id="pitchCount">0</span> pitches</div>
+        <div class="sw"><input type="text" id="pitchSearch" placeholder="search…" oninput="renderPitches()"></div>
+        <select class="fsel" id="filterCountry" onchange="renderPitches()">
+          <option value="">All Countries</option>
+          <option>UK</option><option>UAE</option><option>France</option><option>Germany</option>
+          <option>Switzerland</option><option>South Korea</option><option>Singapore</option>
+          <option>Hong Kong</option><option>Thailand</option><option>Japan</option><option>US</option><option>Other</option>
+        </select>
+        <select class="fsel" id="filterSpk" onchange="renderPitches()">
+          <option value="">All Spokespeople</option>
+          <option>Michael Shaulov</option><option>Ran Goldi</option><option>Shahar Madar</option>
+          <option>Stephen Richardson</option><option>Michael Levine</option><option>Tim Way</option>
+          <option>Adam Levine</option><option>Neil Chopra</option><option>Dea Markova</option>
+          <option>Varun Paul</option><option>John Hallahan</option><option>Richard Astle</option>
+          <option>Alexandre Chessé</option><option>Amy Zhang</option><option>Oded</option>
+          <option>Idan Ofrat</option><option>Itay</option><option>Tal Zackon</option>
+        </select>
+        <select class="fsel" id="filterMonth" onchange="renderPitches()">
+          <option value="">All Time</option>
+        </select>
+        <input type="date" id="filterFrom" class="fsel" style="padding:7px 9px;font-family:'DM Mono',monospace;font-size:11px" onchange="renderPitches()" title="From date">
+        <input type="date" id="filterTo" class="fsel" style="padding:7px 9px;font-family:'DM Mono',monospace;font-size:11px" onchange="renderPitches()" title="To date">
+        <div class="exp-grp">
+          <button class="ebtn btn-csv" onclick="exportCSV()">↓ CSV</button>
+          <button class="ebtn btn-cpy" onclick="copyPitches()">⎘ Copy</button>
+        </div>
+      </div>
+      <div class="cards-wrap" id="cardsWrap">
+        <div class="empty on" id="pitchEmpty">
+          <div class="ei">📋</div>
+          <h3>No pitches logged yet</h3>
+          <p>Fill in the form on the left, paste your reporter list, and save your first pitch.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ BULK CHECK PAGE ══ -->
+<div class="page" id="page-bulk">
+  <div class="bulk-page">
+    <div class="pg-header">
+      <h2>Media Outreach Checker</h2>
+      <p>Paste your intended outreach list and instantly see who has already been contacted 2+ times this month.</p>
+    </div>
+    <div class="bulk-grid">
+
+      <div class="card">
+        <h3>Your List</h3>
+        <div class="info-box">One reporter per line: <code>Reporter Name</code> · <code>Outlet</code><br>Paste straight from a spreadsheet — tabs handled automatically.</div>
+        <div class="field"><label>Outreach list</label>
+          <textarea class="bulk-ta" id="bulkInput" placeholder="James Walker&#9;Financial Times&#10;Sarah Chen&#9;Bloomberg&#10;Emma Thompson&#9;BBC"></textarea>
+        </div>
+        <div class="field"><label>Check for month</label>
+          <select class="fsel" id="bulkMonth" style="width:100%"></select>
+        </div>
+        <button class="check-btn" onclick="runBulkCheck()">Run Check →</button>
+      </div>
+
+      <div class="card">
+        <h3>Country Pitch Limits</h3>
+        <div id="countryLimitDisplay"><p style="color:var(--steel);font-size:13px">Select a month to see limits.</p></div>
+      </div>
+
+      <div class="card full" id="bulkResultsCard" style="display:none">
+        <h3>Results</h3>
+        <div class="bsum-bar" id="bsumBar"></div>
+        <div id="bulkResults"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ SUMMARY PAGE ══ -->
+<div class="page" id="page-summary">
+  <div class="sum-page">
+    <div class="sum-hdr">
+      <h2>Monthly Summary</h2>
+      <select class="month-sel" id="summaryMonth" onchange="renderSummary()"></select>
+      <button class="exp-sum" onclick="exportSummary()">↓ Export Report</button>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card"><div class="v" id="s-pitches">0</div><div class="l">Pitches Sent</div></div>
+      <div class="stat-card"><div class="v" id="s-countries">0</div><div class="l">Countries</div></div>
+      <div class="stat-card"><div class="v" id="s-spk">0</div><div class="l">Spokespeople</div></div>
+    </div>
+
+    <div class="sum-grid">
+      <div class="sum-card"><h3>Pitches by Country</h3><div id="countryBars"></div></div>
+      <div class="sum-card"><h3>Pitches by Spokesperson</h3><div id="spkBars"></div></div>
+      <div class="sum-card full"><h3>Pitches by Topic</h3><div id="topicBars"></div></div>
+
+      <div class="sum-card full">
+        <h3>Full Pitch Log</h3>
+        <table class="rep-table">
+          <thead><tr><th>Date</th><th>Country</th><th>Topic</th><th>Spokesperson</th><th>Reporters</th><th>Link</th></tr></thead>
+          <tbody id="fullLogBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ MEDIA DATABASE PAGE ══ -->
+<div class="page" id="page-media">
+  <div class="media-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="media-sidebar">
+      <div class="msb-search">
+        <div class="sw"><input type="text" id="mediaSearch" placeholder="name, outlet, email…" oninput="renderMedia()"></div>
+      </div>
+      <div class="msb-div"></div>
+
+      <div class="msb-group">
+        <div class="msb-label">Sector</div>
+        <div class="msb-chips">
+          <div class="mchip all active" data-filter="sector" data-val="__all__" onclick="handleMChip(this)">All</div>
+          <div class="mchip" data-filter="sector" data-val="AI"         onclick="handleMChip(this)">AI</div>
+          <div class="mchip" data-filter="sector" data-val="Technology" onclick="handleMChip(this)">Technology</div>
+          <div class="mchip" data-filter="sector" data-val="Business"   onclick="handleMChip(this)">Business</div>
+          <div class="mchip" data-filter="sector" data-val="Finance"    onclick="handleMChip(this)">Finance</div>
+          <div class="mchip" data-filter="sector" data-val="Markets"    onclick="handleMChip(this)">Markets</div>
+          <div class="mchip" data-filter="sector" data-val="Crypto"     onclick="handleMChip(this)">Crypto</div>
+          <div class="mchip" data-filter="sector" data-val="Mainstream" onclick="handleMChip(this)">Mainstream</div>
+        </div>
+      </div>
+
+      <div class="msb-div"></div>
+
+      <div class="msb-group">
+        <div class="msb-label">Country</div>
+        <div class="msb-chips">
+          <div class="mchip all active" data-filter="country" data-val="__all__" onclick="handleMChip(this)">All</div>
+          <div class="mchip" data-filter="country" data-val="UK"          onclick="handleMChip(this)">UK</div>
+          <div class="mchip" data-filter="country" data-val="US"          onclick="handleMChip(this)">US</div>
+          <div class="mchip" data-filter="country" data-val="UAE"         onclick="handleMChip(this)">UAE</div>
+          <div class="mchip" data-filter="country" data-val="France"      onclick="handleMChip(this)">France</div>
+          <div class="mchip" data-filter="country" data-val="Germany"     onclick="handleMChip(this)">Germany</div>
+          <div class="mchip" data-filter="country" data-val="Switzerland" onclick="handleMChip(this)">Switzerland</div>
+          <div class="mchip" data-filter="country" data-val="South Korea" onclick="handleMChip(this)">South Korea</div>
+          <div class="mchip" data-filter="country" data-val="Hong Kong"   onclick="handleMChip(this)">Hong Kong</div>
+          <div class="mchip" data-filter="country" data-val="Japan"       onclick="handleMChip(this)">Japan</div>
+          <div class="mchip" data-filter="country" data-val="Singapore"   onclick="handleMChip(this)">Singapore</div>
+          <div class="mchip" data-filter="country" data-val="Thailand"    onclick="handleMChip(this)">Thailand</div>
+        </div>
+      </div>
+
+      <div class="msb-div"></div>
+
+      <div class="msb-group">
+        <div class="msb-label">Outlet Type</div>
+        <div class="msb-chips">
+          <div class="mchip all active" data-filter="type" data-val="__all__" onclick="handleMChip(this)">All</div>
+          <div class="mchip" data-filter="type" data-val="Publication" onclick="handleMChip(this)">Publication</div>
+          <div class="mchip" data-filter="type" data-val="Broadcast"   onclick="handleMChip(this)">Broadcast</div>
+          <div class="mchip" data-filter="type" data-val="Podcast"     onclick="handleMChip(this)">Podcast</div>
+          <div class="mchip" data-filter="type" data-val="Magazine"    onclick="handleMChip(this)">Magazine</div>
+        </div>
+      </div>
+
+      <div class="msb-div"></div>
+      <button class="clr-btn2" onclick="clearMediaFilters()">↺ Clear all filters</button>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="media-main">
+      <div class="list-bar">
+        <div class="rcount"><span id="mediaCount">0</span> reporters</div>
+        <div class="pills" id="mediaPills"></div>
+        <div class="exp-grp">
+          <button class="ebtn btn-orange-outline" onclick="openMediaBulk()">⊞ Bulk Add</button>
+          <button class="ebtn btn-orange-solid"   onclick="openMediaAdd()">+ Add Reporter</button>
+          <button class="ebtn btn-csv" onclick="exportMediaCSV()">↓ CSV</button>
+          <button class="ebtn btn-cpy" onclick="copyMedia()">⎘ Copy</button>
+        </div>
+      </div>
+      <div class="tw">
+        <div class="empty on" id="mediaEmpty">
+          <div class="ei">📂</div>
+          <h3>No reporters yet</h3>
+          <p>Add reporters one by one or use ⊞ Bulk Add to paste a list.</p>
+        </div>
+        <table id="mediaTable" style="display:none">
+          <thead><tr>
+            <th>Outlet</th><th>Reporter</th><th>Email</th>
+            <th>Sector</th><th>Type</th><th>Country</th><th>Notes</th><th></th>
+          </tr></thead>
+          <tbody id="mediaBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MEDIA ADD/EDIT MODAL -->
+<div class="mb" id="mediaAddModal">
+  <div class="md">
+    <div class="mh"><h2 id="mediaModalTitle">+ Add Reporter</h2><button class="mc" onclick="closeMediaAdd()">✕</button></div>
+    <div class="mb-body">
+      <div class="form-grid">
+        <div class="field"><label>Name *</label><input id="mf-name" type="text" placeholder="James Walker"></div>
+        <div class="field"><label>Email *</label><input id="mf-email" type="email" placeholder="j.walker@ft.com"></div>
+        <div class="field"><label>Outlet</label><input id="mf-outlet" type="text" placeholder="Financial Times"></div>
+        <div class="field"><label>Sector</label>
+          <select id="mf-sector"><option value="">— select —</option>
+            <option>AI</option><option>Business</option><option>Markets</option>
+            <option>Finance</option><option>Crypto</option><option>Mainstream</option><option>Technology</option>
+          </select>
+        </div>
+        <div class="field"><label>Country</label>
+          <select id="mf-country"><option value="">— select —</option>
+            <option>UK</option><option>UAE</option><option>France</option><option>Germany</option>
+            <option>Switzerland</option><option>South Korea</option><option>Singapore</option>
+            <option>Hong Kong</option><option>Thailand</option><option>Japan</option><option>US</option><option>Other</option>
+          </select>
+        </div>
+        <div class="field"><label>Outlet Type</label>
+          <select id="mf-type"><option value="">— select —</option>
+            <option>Publication</option><option>Podcast</option><option>Broadcast</option><option>Magazine</option>
+          </select>
+        </div>
+        <div class="field full"><label>Notes</label><textarea id="mf-notes" placeholder="e.g. Senior fintech reporter, covers DeFi…"></textarea></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-danger" id="mediaDeleteBtn" onclick="deleteMediaReporter()" style="display:none">Delete</button>
+        <button class="btn-secondary" onclick="closeMediaAdd()">Cancel</button>
+        <button class="btn-primary" onclick="saveMediaReporter()">Save Reporter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MEDIA BULK ADD MODAL -->
+<div class="mb" id="mediaBulkModal">
+  <div class="md md-lg">
+    <div class="mh"><h2>⊞ Bulk Add Reporters</h2><button class="mc" onclick="closeMediaBulk()">✕</button></div>
+    <div class="mb-body">
+      <div class="info-box">
+        One reporter per line. Column order: <code>Name</code> · <code>Email</code> · <code>Outlet</code> · <code>Sector</code> · <code>Country</code> · <code>Type</code> · <code>Notes</code><br>
+        Paste directly from Google Sheets or Excel — tabs handled automatically. Only Name and Email required.
+      </div>
+      <div class="field"><label>Paste your list</label>
+        <textarea class="bulk-ta" id="mediaBulkInput" placeholder="James Walker&#9;j.walker@ft.com&#9;Financial Times&#9;Finance&#9;UK&#9;Publication&#9;Senior fintech" oninput="parseMediaBulk()"></textarea>
+      </div>
+      <div id="mediaBulkPreview"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeMediaBulk()">Cancel</button>
+        <button class="btn-primary" id="mediaBulkSaveBtn" onclick="saveMediaBulk()" disabled>Import 0 Reporters</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP MODAL -->
+<div class="mb" id="setupModal">
+  <div class="md">
+    <div class="mh"><h2>⚙ Connect Shared Database</h2><button class="mc" onclick="closeSetup()">✕</button></div>
+    <div class="mb-body">
+      <div class="setup-note">One person sets this up — teammates paste the same key to share one live database. Use the same JSONBin key as the Hokku Media Database if you already have one.</div>
+      <div class="step"><div class="sn">1</div><div class="sc"><h4>Create a free JSONBin account</h4><p>Go to <strong>jsonbin.io</strong> → Sign Up → use your agency email.</p></div></div>
+      <div class="step"><div class="sn">2</div><div class="sc"><h4>Get your Master Key</h4><p>Profile → <strong>API Keys</strong> → copy the <strong>Master Key</strong> (starts with <code>$2b$</code>).</p></div></div>
+      <div class="step"><div class="sn">3</div><div class="sc">
+        <h4>Paste it below</h4>
+        <p>A separate bin for Fireblocks pitches will be created automatically.</p>
+        <div class="kw">
+          <input type="password" id="apiKeyInput" placeholder="$2b$10$… master key" autocomplete="off">
+          <button class="btn-conn" onclick="connectDB()">Connect</button>
+        </div>
+        <div class="cs" id="connStatus"></div>
+      </div></div>
+      <div class="step"><div class="sn">4</div><div class="sc"><h4>Share with teammates</h4><p>Share the app URL + Master Key. Each person pastes it once in ⚙.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// CONFIG & STORAGE
+// ══════════════════════════════════════════
+const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
+const CREDS_KEY    = 'fb_pitch_creds_v2';
+const CACHE_KEY    = 'fb_pitch_cache_v2';
+const COUNTRY_LIMITS = {UK:3,UAE:3,France:2,Germany:2,Switzerland:2};
+
+const gc = ()=>{ try{return JSON.parse(localStorage.getItem(CREDS_KEY))||{};}catch{return{};} };
+const sc = o => localStorage.setItem(CREDS_KEY,JSON.stringify(o));
+const gca= ()=>{ try{return JSON.parse(localStorage.getItem(CACHE_KEY))||[];}catch{return[];} };
+const sca= d => localStorage.setItem(CACHE_KEY,JSON.stringify(d));
+const uid= ()=> Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+let DB = [];       // array of pitch objects
+let saveTimer;
+let parsedReps = []; // current form parsed reporters
+
+// ══════════════════════════════════════════
+// JSONBIN
+// ══════════════════════════════════════════
+async function jGet(p,k){ const r=await fetch(JSONBIN_BASE+p,{headers:{'X-Master-Key':k}}); if(!r.ok)throw new Error(r.status); return r.json(); }
+async function jPost(p,k,b){ const r=await fetch(JSONBIN_BASE+p,{method:'POST',headers:{'X-Master-Key':k,'Content-Type':'application/json'},body:JSON.stringify(b)}); if(!r.ok)throw new Error(r.status); return r.json(); }
+async function jPut(p,k,b){ const r=await fetch(JSONBIN_BASE+p,{method:'PUT',headers:{'X-Master-Key':k,'Content-Type':'application/json'},body:JSON.stringify(b)}); if(!r.ok)throw new Error(r.status); return r.json(); }
+
+async function connectDB(){
+  const key=document.getElementById('apiKeyInput').value.trim();
+  if(!key){setCS('Paste your Master Key','err');return;}
+  setCS('Connecting…',''); setSP('saving','Connecting…');
+  try{
+    const creds=gc();
+    if(creds.binId&&creds.apiKey===key){
+      const d=await jGet(`/b/${creds.binId}/latest`,key);
+      DB=d.record.pitches||[]; sca(DB);
+      setCS(`✓ Reconnected — ${DB.length} pitches`,'ok'); fin(key,creds.binId); return;
+    }
+    const res=await jPost('/b',key,{pitches:[],meta:{app:'fb_pitch_tracker_v2',created:new Date().toISOString()}});
+    DB=[]; sca(DB); sc({apiKey:key,binId:res.metadata.id});
+    setCS('✓ Database created — ready','ok'); fin(key,res.metadata.id);
+  }catch(e){setCS(`✗ ${e.message} — check your key`,'err'); setSP('error','Failed');}
+}
+
+function fin(key,binId){
+  sc({apiKey:key,binId}); closeSetup(); setSP('live',`Live · ${DB.length} pitches`);
+  populateMonths(); renderPitches(); renderSummary(); renderCountryLimits();
+  toast('Connected','s');
+}
+
+async function bootLoad(){
+  const c=gc();
+  if(!c.apiKey||!c.binId){
+    const cache=gca();
+    if(cache.length){DB=cache; setSP('offline','Offline — cached');}
+    else setSP('offline','Not connected');
+    populateMonths(); renderPitches(); renderSummary(); renderCountryLimits();
+    return;
+  }
+  const cache=gca();
+  if(cache.length){DB=cache; setSP('saving','Syncing…'); populateMonths(); renderPitches();}
+  try{
+    const d=await jGet(`/b/${c.binId}/latest`,c.apiKey);
+    DB=d.record.pitches||[]; sca(DB); setSP('live',`Live · ${DB.length} pitches`);
+    populateMonths(); renderPitches(); renderSummary(); renderCountryLimits();
+  }catch{
+    if(cache.length) setSP('offline','Offline — cached');
+    else{setSP('error','Error'); toast('Connection failed — open ⚙','e');}
+  }
+}
+
+function scheduleSave(){
+  sca(DB); clearTimeout(saveTimer);
+  saveTimer=setTimeout(async()=>{
+    const c=gc(); if(!c.apiKey||!c.binId) return;
+    setSP('saving','Saving…');
+    try{await jPut(`/b/${c.binId}`,c.apiKey,{pitches:DB}); setSP('live',`Live · ${DB.length} pitches`);}
+    catch{setSP('error','Save failed'); toast('Could not save','e');}
+  },900);
+}
+
+function setSP(cls,l){ document.getElementById('syncPill').className='sync-pill '+cls; document.getElementById('syncLabel').textContent=l; }
+function setCS(m,c){ const el=document.getElementById('connStatus'); el.textContent=m; el.className='cs '+c; }
+
+// ══════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════
+function showPage(tab){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+tab.dataset.page).classList.add('active');
+  tab.classList.add('active');
+  if(tab.dataset.page==='summary') renderSummary();
+  if(tab.dataset.page==='bulk') renderCountryLimits();
+}
+
+// ══════════════════════════════════════════
+// DATE / MONTH HELPERS
+// ══════════════════════════════════════════
+const mk  = d => {
+  if(!d) return '';
+  // Handle YYYY-MM-DD or any ISO string safely
+  const s = String(d).trim();
+  if(s.length >= 7) return s.slice(0,7);
+  return '';
+};
+const ml  = k => { if(!k)return''; const[y,m]=k.split('-'); return new Date(y,+m-1,1).toLocaleString('en-GB',{month:'long',year:'numeric'}); };
+const cmk = () => { const n=new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`; };
+const today= () => new Date().toISOString().slice(0,10);
+
+function allMonths(){
+  const keys=[...new Set(DB.map(p=>mk(p.date)).filter(Boolean))].sort().reverse();
+  const cur=cmk(); if(!keys.includes(cur)) keys.unshift(cur);
+  return keys;
+}
+
+function populateMonths(){
+  const months=allMonths();
+  ['summaryMonth','bulkMonth','filterMonth'].forEach(id=>{
+    const sel=document.getElementById(id);
+    const prev=sel.value;
+    const isFilter=id==='filterMonth';
+    sel.innerHTML=isFilter?'<option value="">All Time</option>':'';
+    months.forEach(m=>{
+      const o=document.createElement('option');
+      o.value=m; o.textContent=ml(m); sel.appendChild(o);
+    });
+    if(prev&&[...sel.options].some(o=>o.value===prev)) sel.value=prev;
+    else if(!isFilter) sel.value=cmk();
+  });
+}
+
+// ══════════════════════════════════════════
+// REPORTER PASTE PARSER
+// ══════════════════════════════════════════
+function parseReporters(){
+  const raw=document.getElementById('f-reporters').value;
+  // Handle all line endings (CRLF, CR, LF)
+  const lines=raw.split(/\r\n|\r|\n/).map(l=>l.trim()).filter(l=>l);
+  parsedReps=lines.map(line=>{
+    let name='', outlet='';
+    if(line.includes('\t')){
+      const parts=line.split('\t').map(s=>s.trim().replace(/^"|"$/g,'').trim()).filter(s=>s);
+      name=parts[0]||''; outlet=parts[1]||'';
+    } else if(line.includes(',')){
+      const parts=line.split(',').map(s=>s.trim().replace(/^"|"$/g,'').trim()).filter(s=>s);
+      name=parts[0]||''; outlet=parts[1]||'';
+    } else {
+      name=line.trim().replace(/^"|"$/g,'').trim();
+    }
+    return{name,outlet};
+  }).filter(r=>r.name);
+  document.getElementById('repCount').textContent=`${parsedReps.length} reporter${parsedReps.length!==1?'s':''}`;
+  const prev=document.getElementById('repPreview');
+  if(!parsedReps.length){prev.innerHTML='';return;}
+  const show=parsedReps.slice(0,5);
+  prev.innerHTML=show.map(r=>`<div class="rp-row"><span class="rp-name">${x(r.name)}</span><span class="rp-outlet">${x(r.outlet)}</span></div>`).join('')
+    +(parsedReps.length>5?`<div class="rp-row" style="color:var(--steel);font-size:12px">…and ${parsedReps.length-5} more</div>`:'');
+}
+
+// ══════════════════════════════════════════
+// SAVE PITCH
+// ══════════════════════════════════════════
+function savePitch(){
+  const date=document.getElementById('f-date').value;
+  const country=document.getElementById('f-country').value;
+  const topic=document.getElementById('f-topic').value.trim();
+  if(!date||!country||!topic){toast('Date, Country and Topic are required','e');return;}
+  if(!parsedReps.length){toast('Paste at least one reporter','e');return;}
+
+  const obj={
+    id: document.getElementById('editId').value||uid(),
+    date, country, topic,
+    spokesperson: document.getElementById('f-spokesperson').value,
+    link:         document.getElementById('f-link').value.trim(),
+    notes:        document.getElementById('f-notes').value.trim(),
+    reporters:    parsedReps.map(r=>({...r})),
+  };
+
+  const eid=document.getElementById('editId').value;
+  if(eid){const i=DB.findIndex(p=>p.id===eid);DB[i]=obj;}
+  else DB.push(obj);
+
+  scheduleSave(); cancelEdit(); populateMonths(); renderPitches();
+  toast(eid?'Pitch updated':`Pitch logged — ${obj.reporters.length} reporters`,'s');
+}
+
+// ══════════════════════════════════════════
+// EDIT / DELETE
+// ══════════════════════════════════════════
+function editPitch(id){
+  const p=DB.find(d=>d.id===id); if(!p) return;
+  document.getElementById('editId').value=id;
+  document.getElementById('formTitle').textContent='Edit Pitch';
+  document.getElementById('f-date').value=p.date||'';
+  document.getElementById('f-country').value=p.country||'';
+  document.getElementById('f-topic').value=p.topic||'';
+  document.getElementById('f-spokesperson').value=p.spokesperson||'';
+  document.getElementById('f-link').value=p.link||'';
+  document.getElementById('f-notes').value=p.notes||'';
+  const repText=(p.reporters||[]).map(r=>r.outlet?`${r.name}\t${r.outlet}`:r.name).join('\n');
+  document.getElementById('f-reporters').value=repText;
+  parseReporters();
+  document.getElementById('cancelBtn').style.display='';
+  document.querySelector('.form-panel').scrollTop=0;
+  document.getElementById('page-log').scrollIntoView();
+}
+
+function deletePitch(id){
+  const p=DB.find(d=>d.id===id); if(!p) return;
+  if(confirm(`Delete pitch "${p.topic}"? Cannot be undone.`)){
+    DB=DB.filter(d=>d.id!==id); scheduleSave(); populateMonths(); renderPitches(); renderSummary();
+    toast('Pitch deleted','w');
+  }
+}
+
+function cancelEdit(){
+  document.getElementById('editId').value='';
+  document.getElementById('formTitle').textContent='+ Log a Pitch';
+  document.getElementById('cancelBtn').style.display='none';
+  ['f-topic','f-link','f-notes'].forEach(id=>document.getElementById(id).value='');
+  ['f-country','f-spokesperson'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-date').value=today();
+  document.getElementById('f-reporters').value='';
+  parsedReps=[]; parseReporters();
+}
+
+// ══════════════════════════════════════════
+// RENDER PITCH CARDS
+// ══════════════════════════════════════════
+function filteredPitches(){
+  const q=document.getElementById('pitchSearch').value.toLowerCase();
+  const fc=document.getElementById('filterCountry').value;
+  const fs=document.getElementById('filterSpk').value;
+  const fm=document.getElementById('filterMonth').value;
+  const from = document.getElementById('filterFrom').value;
+  const to   = document.getElementById('filterTo').value;
+  return DB.filter(p=>{
+    if(fc&&p.country!==fc) return false;
+    if(fs&&!p.spokesperson.startsWith(fs)) return false;
+    if(fm&&mk(p.date)!==fm) return false;
+    if(from&&p.date&&p.date<from) return false;
+    if(to  &&p.date&&p.date>to)   return false;
+    if(q){
+      const haystack=[p.country,p.topic,p.spokesperson,p.notes,...(p.reporters||[]).map(r=>r.name+' '+r.outlet)].join(' ').toLowerCase();
+      if(!haystack.includes(q)) return false;
+    }
+    return true;
+  }).sort((a,b)=>b.date.localeCompare(a.date));
+}
+
+function toggleReporters(id){
+  const el=document.getElementById('rep-'+id);
+  if(el) el.classList.toggle('open');
+}
+
+function renderPitches(){
+  const rows=filteredPitches();
+  document.getElementById('pitchCount').textContent=rows.length;
+  const wrap=document.getElementById('cardsWrap');
+  const empty=document.getElementById('pitchEmpty');
+
+  if(!rows.length){
+    empty.classList.add('on');
+    const existing=wrap.querySelectorAll('.pitch-card');
+    existing.forEach(e=>e.remove());
+    return;
+  }
+  empty.classList.remove('on');
+
+  // Remove old cards
+  wrap.querySelectorAll('.pitch-card').forEach(e=>e.remove());
+
+  rows.forEach(p=>{
+    const spkShort=p.spokesperson?p.spokesperson.split('—')[0].trim():'';
+    const repCount=(p.reporters||[]).length;
+    const div=document.createElement('div');
+    div.className='pitch-card';
+    div.id='card-'+p.id;
+    div.innerHTML=`
+      <div class="pc-head">
+        <div class="pc-date">${p.date||''}</div>
+        <div class="pc-main">
+          <div class="pc-topic">${x(p.topic)}</div>
+          <div class="pc-meta">
+            ${p.country?`<span class="tag tag-country">${x(p.country)}</span>`:''}
+            ${spkShort?`<span class="tag tag-spk">${x(spkShort)}</span>`:''}
+            <span class="tag tag-count">${repCount} reporter${repCount!==1?'s':''}</span>
+          </div>
+        </div>
+        <div class="pc-actions">
+          <button class="pc-btn pc-toggle" onclick="toggleReporters('${p.id}')">Reporters ▾</button>
+          <button class="pc-btn pc-edit" onclick="editPitch('${p.id}')">Edit</button>
+          <button class="pc-btn pc-del"  onclick="deletePitch('${p.id}')">✕</button>
+        </div>
+      </div>
+      <div class="pc-reporters" id="rep-${p.id}">
+        <div class="pc-rep-list">
+          ${(p.reporters||[]).map(r=>`<div class="rep-chip">${x(r.name)}${r.outlet?`<span>${x(r.outlet)}</span>`:''}</div>`).join('')}
+        </div>
+        ${p.link?`<div class="pc-link"><a href="${x(p.link)}" target="_blank">↗ Link to pitch doc</a></div>`:''}
+        ${p.notes?`<div class="pc-notes">${x(p.notes)}</div>`:''}
+      </div>
+    `;
+    wrap.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════════════
+// BULK CHECKER
+// ══════════════════════════════════════════
+function runBulkCheck(){
+  const raw=document.getElementById('bulkInput').value;
+  const month=document.getElementById('bulkMonth').value;
+  // Handle all line endings (CRLF, CR, LF)
+  const lines=raw.split(/\r\n|\r|\n/).map(l=>l.trim()).filter(l=>l);
+  if(!lines.length){toast('Paste a list first','e');return;}
+  if(!month){toast('Select a month','e');return;}
+
+  // Build per-reporter contact count for this month from DB
+  // Each pitch counts as ONE contact per reporter, regardless of how many pitches they appear in
+  const monthPitches = DB.filter(p => {
+    const pMonth = mk(p.date);
+    return pMonth === month;
+  });
+
+  // contactMap: reporter name (lowercase) -> {count of DISTINCT pitches they were in, pitch topics}
+  // Each reporter counts only ONCE per pitch (deduplicated within pitch), 
+  // and only their name is used as the key — outlet is irrelevant to counting
+  const contactMap = {};
+  monthPitches.forEach(p => {
+    // Deduplicate reporters within this single pitch first
+    const seenInThisPitch = new Set();
+    (p.reporters || []).forEach(r => {
+      if(!r.name || !r.name.trim()) return;
+      const k = r.name.toLowerCase().trim();
+      if(seenInThisPitch.has(k)) return; // skip duplicates within same pitch
+      seenInThisPitch.add(k);
+      if(!contactMap[k]) contactMap[k] = {count:0, pitches:[], outlet:r.outlet||''};
+      contactMap[k].count++;
+      if(!contactMap[k].pitches.includes(p.topic)) contactMap[k].pitches.push(p.topic);
+    });
+  });
+
+  // Parse input list — deduplicate by name so each reporter only appears once in results
+  const seenInput = new Set();
+  const inputList = lines.map(line => {
+    // Split on tab first (spreadsheet paste), then comma, then just take whole line as name
+    let name = '', outlet = '';
+    if(line.includes('\t')) {
+      const parts = line.split('\t').map(s=>s.trim().replace(/^"|"$/g,'').trim()).filter(s=>s);
+      name   = parts[0] || '';
+      outlet = parts[1] || '';
+    } else if(line.includes(',')) {
+      const parts = line.split(',').map(s=>s.trim().replace(/^"|"$/g,'').trim()).filter(s=>s);
+      name   = parts[0] || '';
+      outlet = parts[1] || '';
+    } else {
+      // Just a plain name, no outlet
+      name = line.trim().replace(/^"|"$/g,'').trim();
+    }
+    return { name, outlet };
+  }).filter(r => {
+    if(!r.name) return false;
+    const k = r.name.toLowerCase().trim();
+    if(seenInput.has(k)) return false;
+    seenInput.add(k);
+    return true;
+  });
+
+  const results = inputList.map(r => {
+    const k = r.name.toLowerCase().trim();
+    const entry = contactMap[k] || {count:0, pitches:[]};
+    return {...r, count: entry.count, pitchList: entry.pitches};
+  });
+
+  document.getElementById('bulkResultsCard').style.display='';
+  const flagged=results.filter(r=>r.count>=2).length;
+  const warn=results.filter(r=>r.count===1).length;
+  const clear=results.filter(r=>r.count===0).length;
+
+  document.getElementById('bsumBar').innerHTML=`
+    <div class="bsum bsum-blue"><span class="bsum-v">${results.length}</span><span class="bsum-l">Checked</span></div>
+    <div class="bsum bsum-red"><span class="bsum-v">${flagged}</span><span class="bsum-l">🔴 Do Not Pitch</span></div>
+    <div class="bsum bsum-amber"><span class="bsum-v">${warn}</span><span class="bsum-l">🟡 1 contact</span></div>
+    <div class="bsum bsum-green"><span class="bsum-v">${clear}</span><span class="bsum-l">🟢 Clear</span></div>
+  `;
+
+  results.sort((a,b)=>b.count-a.count);
+  document.getElementById('bulkResults').innerHTML=results.map(r=>{
+    let flag,cls;
+    if(r.count>=2){flag='🔴 DO NOT PITCH';cls='f-red';}
+    else if(r.count===1){flag='🟡 1 contact made';cls='f-amber';}
+    else{flag='🟢 Clear';cls='f-green';}
+    const pts=r.pitchList.length?`<span style="font-size:11px;color:var(--steel);margin-left:8px">via: ${r.pitchList.map(t=>x(t)).join(', ')}</span>`:'';
+    return `<div class="res-row">
+      <span class="res-flag ${cls}">${flag}</span>
+      <span class="res-name">${x(r.name)}</span>
+      <span class="res-outlet">${x(r.outlet)}</span>
+      <span class="res-ct">${r.count} contact${r.count!==1?'s':''} this month${pts}</span>
+    </div>`;
+  }).join('');
+
+  renderCountryLimits(month);
+  toast(`Checked ${results.length} reporters`,'s');
+}
+
+function renderCountryLimits(month){
+  const m=month||document.getElementById('bulkMonth').value||cmk();
+  const mp=DB.filter(p=>mk(p.date)===m);
+  const counts={};
+  mp.forEach(p=>{if(p.country) counts[p.country]=(counts[p.country]||0)+1;});
+
+  const tracked=Object.entries(COUNTRY_LIMITS);
+  const html=tracked.map(([c,lim])=>{
+    const used=counts[c]||0;
+    const pct=Math.min(100,Math.round(used/lim*100));
+    const cls=used>=lim?'over':used===lim-1?'warn':'';
+    const tc=used>=lim?'lim-over':used===lim-1?'lim-warn':'lim-ok';
+    const label=used>=lim?'LIMIT REACHED':used===lim-1?'1 remaining':`${lim-used} remaining`;
+    return `<div class="bar-row"><span class="bar-label">${c}</span><div class="bar-track"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div><span class="bar-ct">${used}/${lim}</span><span class="lim-tag ${tc}">${label}</span></div>`;
+  }).join('');
+  const others=Object.entries(counts).filter(([c])=>!COUNTRY_LIMITS[c]).map(([c,n])=>`<div class="bar-row"><span class="bar-label">${x(c)}</span><span class="bar-ct" style="margin-left:auto">${n} — no limit</span></div>`).join('');
+  document.getElementById('countryLimitDisplay').innerHTML=`<p style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--steel);margin-bottom:12px">${ml(m)}</p>${html}${others}`;
+}
+
+// ══════════════════════════════════════════
+// MONTHLY SUMMARY
+// ══════════════════════════════════════════
+function renderSummary(){
+  const month=document.getElementById('summaryMonth').value;
+  const pitches=month?DB.filter(p=>mk(p.date)===month):DB;
+  pitches.sort((a,b)=>b.date.localeCompare(a.date));
+
+  // Flatten all reporters from pitches in this period
+  const allReps=[];
+  pitches.forEach(p=>(p.reporters||[]).forEach(r=>allReps.push({...r,topic:p.topic,date:p.date})));
+
+  const uniqueReps=new Set(allReps.map(r=>r.name.toLowerCase()));
+  document.getElementById('s-pitches').textContent=pitches.length;
+  document.getElementById('s-countries').textContent=new Set(pitches.map(p=>p.country).filter(Boolean)).size;
+  document.getElementById('s-spk').textContent=new Set(pitches.map(p=>p.spokesperson).filter(Boolean)).size;
+
+  // Country bars (per pitch)
+  const byC={};
+  pitches.forEach(p=>{if(p.country) byC[p.country]=(byC[p.country]||0)+1;});
+  const maxC=Math.max(1,...Object.values(byC));
+  document.getElementById('countryBars').innerHTML=Object.entries(byC).sort((a,b)=>b[1]-a[1]).map(([c,n])=>{
+    const lim=COUNTRY_LIMITS[c];
+    const cls=lim?(n>=lim?'over':n===lim-1?'warn':''):'';
+    const tag=lim?`<span class="lim-tag ${n>=lim?'lim-over':n===lim-1?'lim-warn':'lim-ok'}">${n}/${lim}</span>`:`<span class="bar-ct">${n}</span>`;
+    return`<div class="bar-row"><span class="bar-label">${x(c)}</span><div class="bar-track"><div class="bar-fill ${cls}" style="width:${Math.round(n/maxC*100)}%"></div></div>${tag}</div>`;
+  }).join('')||'<p style="color:var(--steel);font-size:13px">No data</p>';
+
+  // Spokesperson bars
+  const byS={};
+  pitches.forEach(p=>{if(p.spokesperson){const k=p.spokesperson.split('—')[0].trim();byS[k]=(byS[k]||0)+1;}});
+  const maxS=Math.max(1,...Object.values(byS));
+  document.getElementById('spkBars').innerHTML=Object.entries(byS).sort((a,b)=>b[1]-a[1]).map(([s,n])=>`
+    <div class="bar-row"><span class="bar-label" title="${x(s)}">${x(s)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/maxS*100)}%"></div></div><span class="bar-ct">${n}</span></div>
+  `).join('')||'<p style="color:var(--steel);font-size:13px">No data</p>';
+
+  // Topic bars
+  const byT={};
+  pitches.forEach(p=>{if(p.topic) byT[p.topic]=(byT[p.topic]||0)+1;});
+  const maxT=Math.max(1,...Object.values(byT));
+  document.getElementById('topicBars').innerHTML=Object.entries(byT).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`
+    <div class="bar-row"><span class="bar-label" style="min-width:200px" title="${x(t)}">${x(t)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/maxT*100)}%"></div></div><span class="bar-ct">${n}</span></div>
+  `).join('')||'<p style="color:var(--steel);font-size:13px">No data</p>';
+
+
+
+  // Full pitch log
+  document.getElementById('fullLogBody').innerHTML=pitches.map(p=>`<tr>
+    <td class="mono" style="font-family:'DM Mono',monospace;font-size:11px">${p.date||''}</td>
+    <td><span class="tag tag-country">${x(p.country)}</span></td>
+    <td style="font-weight:500">${x(p.topic)}</td>
+    <td style="font-size:12px">${x(p.spokesperson?p.spokesperson.split('—')[0].trim():'')}</td>
+    <td style="font-size:12px;color:var(--steel)">${(p.reporters||[]).length} reporters</td>
+    <td>${p.link?`<a href="${x(p.link)}" target="_blank">↗ Link</a>`:''}</td>
+  </tr>`).join('')||`<tr><td colspan="6" style="color:var(--steel);padding:16px 10px;text-align:center">No pitches for this period</td></tr>`;
+}
+
+// ══════════════════════════════════════════
+// EXPORTS
+// ══════════════════════════════════════════
+function exportCSV(){
+  const rows=filteredPitches();
+  if(!rows.length){toast('No pitches to export','e');return;}
+  // Expand: one row per reporter per pitch
+  const flat=[];
+  rows.forEach(p=>(p.reporters||[{name:'',outlet:''}]).forEach(r=>
+    flat.push([p.date,p.country,p.topic,p.spokesperson,r.name,r.outlet,p.link,p.notes])
+  ));
+  csvDl([['Date','Country','Topic','Spokesperson','Reporter','Outlet','Link','Notes'],...flat],`fb_pitches_${today()}.csv`);
+  toast(`Exported ${flat.length} rows`,'s');
+}
+
+function copyPitches(){
+  const rows=filteredPitches();
+  if(!rows.length){toast('Nothing to copy','e');return;}
+  const flat=[['Date','Country','Topic','Spokesperson','Reporter','Outlet','Link','Notes']];
+  rows.forEach(p=>(p.reporters||[{name:'',outlet:''}]).forEach(r=>
+    flat.push([p.date,p.country,p.topic,p.spokesperson,r.name,r.outlet,p.link,p.notes])
+  ));
+  const tsv=flat.map(r=>r.map(v=>v||'').join('\t')).join('\n');
+  navigator.clipboard.writeText(tsv).then(()=>toast(`Copied — paste into Sheets`,'s')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=tsv;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
+    toast('Copied','s');
+  });
+}
+
+function exportSummary(){
+  const month=document.getElementById('summaryMonth').value;
+  const pitches=month?DB.filter(p=>mk(p.date)===month):DB;
+  if(!pitches.length){toast('No pitches for this period','e');return;}
+  const flat=[['Date','Country','Topic','Spokesperson','Reporter','Outlet','Link','Notes']];
+  pitches.forEach(p=>(p.reporters||[{name:'',outlet:''}]).forEach(r=>
+    flat.push([p.date,p.country,p.topic,p.spokesperson,r.name,r.outlet,p.link,p.notes])
+  ));
+  csvDl(flat,`fb_summary_${month||'all'}.csv`);
+  toast(`Exported ${flat.length-1} rows`,'s');
+}
+
+function csvDl(rows,name){
+  const csv=rows.map(r=>r.map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([csv],{type:'text/csv'})),download:name});a.click();
+}
+
+const x=s=>s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'';
+
+// ══════════════════════════════════════════
+// SETUP MODAL
+// ══════════════════════════════════════════
+function openSetup(){const c=gc();if(c.apiKey)document.getElementById('apiKeyInput').value=c.apiKey;document.getElementById('connStatus').textContent='';document.getElementById('setupModal').classList.add('on');}
+function closeSetup(){document.getElementById('setupModal').classList.remove('on');}
+document.getElementById('setupModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeSetup();});
+
+// TOAST
+let tt;
+function toast(m,t=''){const el=document.getElementById('toast');el.textContent=m;el.className=`toast on ${t}`;clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('on'),3800);}
+
+
+// ══════════════════════════════════════════
+// MEDIA DATABASE
+// ══════════════════════════════════════════
+const MEDIA_CACHE_KEY = 'fb_media_cache_v1';
+const MEDIA_BIN_KEY   = 'fb_media_bin_v1'; // stored inside creds alongside pitch bin
+
+let MEDIA_DB = [];
+let mediaSaveTimer;
+let mediaEditingId = null;
+let mediaBulkParsed = [];
+const MF = {sectors:new Set(), countries:new Set(), types:new Set()};
+
+// Storage helpers for media bin ID
+function getMediaBinId(){ try{return JSON.parse(localStorage.getItem(MEDIA_BIN_KEY))||'';}catch{return '';} }
+function saveMediaBinId(id){ localStorage.setItem(MEDIA_BIN_KEY, id); }
+function getMediaCache(){ try{return JSON.parse(localStorage.getItem(MEDIA_CACHE_KEY))||[];}catch{return[];} }
+function saveMediaCache(d){ localStorage.setItem(MEDIA_CACHE_KEY, JSON.stringify(d)); }
+
+// Load media DB from JSONBin (uses same API key as pitches, separate bin)
+async function loadMediaDB(){
+  const creds = gc();
+  if(!creds.apiKey){ MEDIA_DB=getMediaCache(); buildMediaChips(); renderMedia(); return; }
+  const binId = getMediaBinId();
+  if(!binId){
+    // Create a new bin for media
+    try{
+      const res = await jPost('/b', creds.apiKey, {reporters:[], meta:{app:'fb_media_db_v1'}});
+      saveMediaBinId(res.metadata.id);
+      MEDIA_DB = []; saveMediaCache(MEDIA_DB);
+      buildMediaChips(); renderMedia();
+    }catch(e){ MEDIA_DB=getMediaCache(); buildMediaChips(); renderMedia(); }
+    return;
+  }
+  // Load from existing bin
+  const cached = getMediaCache();
+  if(cached.length){ MEDIA_DB=cached; buildMediaChips(); renderMedia(); }
+  try{
+    const d = await jGet('/b/'+binId+'/latest', creds.apiKey);
+    MEDIA_DB = d.record.reporters||[];
+    saveMediaCache(MEDIA_DB);
+    buildMediaChips(); renderMedia();
+  }catch(e){ if(!cached.length){ MEDIA_DB=[]; buildMediaChips(); renderMedia(); } }
+}
+
+function scheduleMediaSave(){
+  saveMediaCache(MEDIA_DB);
+  clearTimeout(mediaSaveTimer);
+  mediaSaveTimer = setTimeout(async()=>{
+    const creds=gc(); const binId=getMediaBinId();
+    if(!creds.apiKey||!binId) return;
+    try{ await jPut('/b/'+binId, creds.apiKey, {reporters:MEDIA_DB}); }
+    catch{ toast('Media DB save failed','e'); }
+  }, 900);
+}
+
+// ── CHIP HANDLER (hardcoded sidebar) ──────
+function buildMediaChips(){ /* chips are hardcoded in HTML — nothing to build */ }
+
+function handleMChip(el){
+  const filter = el.dataset.filter; // 'sector', 'country', 'type'
+  const val    = el.dataset.val;
+  const set    = filter==='sector'?MF.sectors:filter==='country'?MF.countries:MF.types;
+
+  if(val==='__all__'){
+    // Clear this filter group
+    set.clear();
+    // Reset all chips in this group: All = active, rest = inactive
+    document.querySelectorAll(`.mchip[data-filter="${filter}"]`).forEach(c=>{
+      c.classList.toggle('active', c.dataset.val==='__all__');
+    });
+  } else {
+    // Toggle this value
+    if(set.has(val)){
+      set.delete(val);
+    } else {
+      set.add(val);
+    }
+    // Update chip states for this group
+    document.querySelectorAll(`.mchip[data-filter="${filter}"]`).forEach(c=>{
+      if(c.dataset.val==='__all__'){
+        c.classList.toggle('active', set.size===0);
+      } else {
+        c.classList.toggle('active', set.has(c.dataset.val));
+      }
+    });
+  }
+  renderMedia();
+}
+
+// ── FILTER & RENDER ───────────────────────
+function filteredMedia(){
+  const q=document.getElementById('mediaSearch').value.toLowerCase();
+  return MEDIA_DB.filter(r=>{
+    if(MF.sectors.size   &&!MF.sectors.has(r.sector))   return false;
+    if(MF.countries.size &&!MF.countries.has(r.country))return false;
+    if(MF.types.size     &&!MF.types.has(r.type))       return false;
+    if(q&&![r.name,r.email,r.outlet,r.sector,r.country,r.type,r.notes].some(f=>f&&f.toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+
+function renderMedia(){
+  const rows=filteredMedia();
+  document.getElementById('mediaCount').textContent=rows.length;
+
+  // Update active filter pills
+  const pills=document.getElementById('mediaPills');
+  if(pills){
+    pills.innerHTML='';
+    [...MF.sectors,...MF.countries,...MF.types].forEach(v=>{
+      const p=document.createElement('span');p.className='pill';p.textContent=v;pills.appendChild(p);
+    });
+    const q=document.getElementById('mediaSearch').value;
+    if(q){const p=document.createElement('span');p.className='pill';p.textContent=`"${q}"`;pills.appendChild(p);}
+  }
+
+  const empty=document.getElementById('mediaEmpty');
+  const tbl=document.getElementById('mediaTable');
+  if(!rows.length){empty.classList.add('on');tbl.style.display='none';return;}
+  empty.classList.remove('on'); tbl.style.display='';
+  document.getElementById('mediaBody').innerHTML=rows.map(r=>`<tr>
+    <td>${x(r.outlet)}</td>
+    <td style="font-weight:500">${x(r.name)}</td>
+    <td class="em">${x(r.email)}</td>
+    <td>${r.sector ?`<span class="tag tag-sector">${x(r.sector)}</span>` :''}</td>
+    <td>${r.type   ?`<span class="tag tag-type">${x(r.type)}</span>`   :''}</td>
+    <td>${r.country?`<span class="tag tag-country">${x(r.country)}</span>`:''}</td>
+    <td class="nt">${x(r.notes)}</td>
+    <td><div class="act-btns">
+      <button class="act-btn btn-edit-row" onclick="openMediaEdit('${r.id}')">Edit</button>
+      <button class="act-btn btn-del-row"  onclick="confirmMediaDel('${r.id}')">✕</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+// ── ADD / EDIT ────────────────────────────
+function openMediaAdd(){
+  mediaEditingId=null;
+  document.getElementById('mediaModalTitle').textContent='+ Add Reporter';
+  document.getElementById('mediaDeleteBtn').style.display='none';
+  ['mf-name','mf-email','mf-outlet','mf-notes'].forEach(id=>document.getElementById(id).value='');
+  ['mf-sector','mf-country','mf-type'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mediaAddModal').classList.add('on');
+  setTimeout(()=>document.getElementById('mf-name').focus(),80);
+}
+
+function openMediaEdit(id){
+  const r=MEDIA_DB.find(d=>d.id===id); if(!r) return;
+  mediaEditingId=id;
+  document.getElementById('mediaModalTitle').textContent='Edit Reporter';
+  document.getElementById('mediaDeleteBtn').style.display='';
+  document.getElementById('mediaDeleteBtn').dataset.id=id;
+  ['name','email','outlet','notes'].forEach(f=>document.getElementById('mf-'+f).value=r[f]||'');
+  ['sector','country','type'].forEach(f=>document.getElementById('mf-'+f).value=r[f]||'');
+  document.getElementById('mediaAddModal').classList.add('on');
+}
+
+function closeMediaAdd(){ document.getElementById('mediaAddModal').classList.remove('on'); mediaEditingId=null; }
+
+function saveMediaReporter(){
+  const name=document.getElementById('mf-name').value.trim();
+  const email=document.getElementById('mf-email').value.trim();
+  if(!name||!email){toast('Name and Email are required','e');return;}
+  const obj={
+    id: mediaEditingId||uid(), name, email,
+    outlet:  document.getElementById('mf-outlet').value.trim(),
+    sector:  document.getElementById('mf-sector').value,
+    country: document.getElementById('mf-country').value,
+    type:    document.getElementById('mf-type').value,
+    notes:   document.getElementById('mf-notes').value.trim(),
+  };
+  if(mediaEditingId){const i=MEDIA_DB.findIndex(r=>r.id===mediaEditingId);MEDIA_DB[i]=obj;}
+  else MEDIA_DB.push(obj);
+  scheduleMediaSave(); closeMediaAdd(); buildMediaChips(); renderMedia();
+  toast(mediaEditingId?`Updated ${name}`:`Added ${name}`,'s');
+}
+
+function confirmMediaDel(id){
+  const r=MEDIA_DB.find(d=>d.id===id); if(!r) return;
+  if(confirm(`Delete ${r.name}? Cannot be undone.`)){
+    MEDIA_DB=MEDIA_DB.filter(d=>d.id!==id);
+    scheduleMediaSave(); buildMediaChips(); renderMedia();
+    toast('Reporter deleted','w');
+  }
+}
+function deleteMediaReporter(){ confirmMediaDel(document.getElementById('mediaDeleteBtn').dataset.id); }
+
+// ── BULK ADD ──────────────────────────────
+function openMediaBulk(){
+  document.getElementById('mediaBulkInput').value='';
+  document.getElementById('mediaBulkPreview').innerHTML='';
+  document.getElementById('mediaBulkSaveBtn').disabled=true;
+  document.getElementById('mediaBulkSaveBtn').textContent='Import 0 Reporters';
+  mediaBulkParsed=[];
+  document.getElementById('mediaBulkModal').classList.add('on');
+  setTimeout(()=>document.getElementById('mediaBulkInput').focus(),80);
+}
+function closeMediaBulk(){ document.getElementById('mediaBulkModal').classList.remove('on'); }
+
+function parseMediaBulk(){
+  const raw=document.getElementById('mediaBulkInput').value;
+  const lines=raw.split(/\r\n|\r|\n/).map(l=>l.trim()).filter(l=>l);
+  mediaBulkParsed=[]; const errs=[];
+  lines.forEach((line,i)=>{
+    let name='',email='',outlet='',sector='',country='',type='',notes='';
+    if(line.includes('\t')){
+      const p=line.split('\t').map(s=>s.trim().replace(/^"|"$/g,'').trim());
+      [name,email,outlet,sector,country,type,...rest]=p; notes=rest.join('\t').trim();
+    } else {
+      const p=line.split(',').map(s=>s.trim().replace(/^"|"$/g,'').trim());
+      [name,email,outlet,sector,country,type,...rest]=p; notes=rest.join(',').trim();
+    }
+    if(!name){errs.push(`Row ${i+1}: missing name`);return;}
+    if(!email||!email.includes('@')){errs.push(`Row ${i+1}: invalid email for "${name}"`);return;}
+    mediaBulkParsed.push({id:uid(),name,email,outlet:outlet||'',sector:sector||'',country:country||'',type:type||'',notes:notes||''});
+  });
+  const prev=document.getElementById('mediaBulkPreview');
+  const btn=document.getElementById('mediaBulkSaveBtn');
+  if(!lines.length){prev.innerHTML='';btn.disabled=true;btn.textContent='Import 0 Reporters';return;}
+  let html='';
+  if(errs.length) html+=`<div class="preview-err">⚠ ${errs.join(' · ')}</div>`;
+  if(mediaBulkParsed.length){
+    html+=`<div class="preview-ok" style="margin-bottom:7px">✓ ${mediaBulkParsed.length} reporters ready</div>`;
+    html+=`<table class="preview-table"><thead><tr><th>Name</th><th>Email</th><th>Outlet</th><th>Country</th><th>Type</th></tr></thead><tbody>`;
+    html+=mediaBulkParsed.slice(0,6).map(r=>`<tr><td>${x(r.name)}</td><td>${x(r.email)}</td><td>${x(r.outlet)}</td><td>${x(r.country)}</td><td>${x(r.type)}</td></tr>`).join('');
+    if(mediaBulkParsed.length>6) html+=`<tr><td colspan="5" style="color:var(--steel);font-size:11px;padding:5px 9px">…and ${mediaBulkParsed.length-6} more</td></tr>`;
+    html+=`</tbody></table>`;
+    btn.disabled=false; btn.textContent=`Import ${mediaBulkParsed.length} Reporter${mediaBulkParsed.length!==1?'s':''}`;
+  } else { btn.disabled=true; btn.textContent='Import 0 Reporters'; }
+  prev.innerHTML=html;
+}
+
+function saveMediaBulk(){
+  if(!mediaBulkParsed.length) return;
+  const fresh=mediaBulkParsed.filter(r=>!MEDIA_DB.some(d=>d.email.toLowerCase()===r.email.toLowerCase()));
+  const dupes=mediaBulkParsed.length-fresh.length;
+  MEDIA_DB.push(...fresh);
+  scheduleMediaSave(); closeMediaBulk(); buildMediaChips(); renderMedia();
+  let msg=`Added ${fresh.length} reporters`;
+  if(dupes) msg+=` · Skipped ${dupes} duplicate${dupes>1?'s':''}`;
+  toast(msg,'s');
+}
+
+// ── EXPORT ────────────────────────────────
+function exportMediaCSV(){
+  const rows=filteredMedia();
+  if(!rows.length){toast('No reporters to export','e');return;}
+  const h=['Outlet','Name','Email','Sector','Type','Country','Notes'];
+  csvDl([h,...rows.map(r=>[r.outlet,r.name,r.email,r.sector,r.type,r.country,r.notes])],`fb_media_${today()}.csv`);
+  toast(`Exported ${rows.length} reporters`,'s');
+}
+
+function copyMedia(){
+  const rows=filteredMedia();
+  if(!rows.length){toast('Nothing to copy','e');return;}
+  const h=['Outlet','Name','Email','Sector','Type','Country','Notes'];
+  const tsv=[h,...rows.map(r=>[r.outlet,r.name,r.email,r.sector,r.type,r.country,r.notes])].map(r=>r.map(v=>v||'').join('\t')).join('\n');
+  navigator.clipboard.writeText(tsv).then(()=>toast(`${rows.length} reporters copied`,'s')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=tsv;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
+    toast(`${rows.length} reporters copied`,'s');
+  });
+}
+
+function clearMediaFilters(){
+  MF.sectors.clear();MF.countries.clear();MF.types.clear();
+  document.getElementById('mediaSearch').value='';
+  // Reset all chips: All = active, rest = inactive
+  document.querySelectorAll('.mchip').forEach(c=>{
+    c.classList.toggle('active', c.dataset.val==='__all__');
+  });
+  renderMedia();
+}
+
+// Close media modals on bg click
+['mediaAddModal','mediaBulkModal'].forEach(id=>{
+  document.getElementById(id)&&document.getElementById(id).addEventListener('click',e=>{
+    if(e.target===e.currentTarget){ id==='mediaAddModal'?closeMediaAdd():closeMediaBulk(); }
+  });
+});
+
+// Add missing tag CSS vars inline  
+const styleEl=document.createElement('style');
+styleEl.textContent='.tag-sector{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(26,75,173,0.18)}.tag-type{background:var(--green-bg);color:var(--green);border:1px solid rgba(30,122,76,0.18)}';
+document.head.appendChild(styleEl);
+
+// BOOT
+document.getElementById('f-date').value=today();
+bootLoad();
+loadMediaDB();
+</script>
+</body>
+</html>
